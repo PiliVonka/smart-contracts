@@ -9,7 +9,8 @@ contract RunCode {
         string id;
         address owner;       
         uint256 balance;
-        uint256 reward;
+        uint256 successReward;
+        uint256 submissionPrice;
     }
     
     enum CodeStatus {
@@ -44,8 +45,18 @@ contract RunCode {
     }
 
     // Functions 
-    function registerTask(string memory taskId, uint256 reward) public payable {
-        Task memory task = Task({ id: taskId, owner: msg.sender, balance: msg.value, reward: reward });
+    function registerTask(
+        string memory taskId,
+        uint256 successReward,
+        uint256 submissionPrice
+    ) public payable {
+        Task memory task = Task({ 
+            id: taskId, 
+            owner: msg.sender,
+            balance: msg.value,
+            successReward: successReward,
+            submissionPrice: submissionPrice
+        });
         tasks[taskId] = task;
     }
 
@@ -57,24 +68,27 @@ contract RunCode {
 
     function withdraw(string memory taskId, uint256 value) public ifTaskOwner(taskId) {
         Task memory task = tasks[taskId];
-        require(task.balance >= value, "Balance is less than value");
+        require(task.balance >= value, "Balance is less than the value");
         msg.sender.transfer(value);
         task.balance -= value;
     }
 
-    function addSubmission(string memory taskId, string memory codeKey) public {
-
+    function addSubmission(string memory taskId, string memory codeKey) public payable {
+        Task memory task = tasks[taskId];
+        require(msg.value >= task.submissionPrice, "Value is less then the price");
+        codeToUser[codeKey] = msg.sender;
     }
 
     function sendStatus(string memory codeKey, string memory taskId, CodeStatus status) public ifOracle returns(bool) {
         if (status == CodeStatus.ACCEPTED) {
             Task memory task = tasks[taskId];
-            require(task.balance >= task.reward, "Balance is less than reward");
+            require(task.balance >= task.successReward, "Balance is less than reward");
             address payable user = codeToUser[codeKey];
-            user.transfer(task.reward);
+            user.transfer(task.successReward);
         } else {
             delete codeToUser[codeKey];
         }
+
         emit ReceivedStatus(codeKey, taskId, status);
         return true;
     }

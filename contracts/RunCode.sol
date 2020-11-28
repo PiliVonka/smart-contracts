@@ -104,9 +104,10 @@ contract RunCode {
         returns(bool) 
     {
         if (status == CodeStatus.ACCEPTED) {
-            Task memory task = tasks[taskId];
+            Task storage task = tasks[taskId];
             require(task.balance >= task.successReward, "Balance is less than reward");
             address payable user = codeToUser[codeKey];
+            task.balance -= task.successReward;
             user.transfer(task.successReward);
         } else {
             delete codeToUser[codeKey];
@@ -146,7 +147,7 @@ contract RunCode {
         ifTaskOwner(taskId)
         returns (bool)
     {
-        Task memory task = tasks[taskId];
+        Task storage task = tasks[taskId];
         require(task.balance >= value, "Balance is less than the value");
         msg.sender.transfer(value);
         task.balance -= value;

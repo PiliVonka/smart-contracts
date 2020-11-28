@@ -2,7 +2,7 @@ const RunCodeContract = artifacts.require("RunCode");
 
 
 const truffleAssertions = require("truffle-assertions");
-const { fromWei, toWei, getBalance } = require("../utils/ether");
+const { fromWei, toWei, getBalance, getStatusCodeFor } = require("../utils/ether");
 
 contract("RunCode", accounts => {
   let RunCode = null;
@@ -14,12 +14,14 @@ contract("RunCode", accounts => {
   const taskId = "id-1";
   const successReward = toWei("3", "ether"); // wins three ethers, if successfully solves the task
   const submissionPrice = toWei("1");  // pays 1 ethers for each submission
+  const taskRegisterValue = toWei("10");
   const codeKey = "key-1";
   
   const outputAccounts = async () => {
     console.log({ oracle: await fromWei(await getBalance(oracle)) });
     console.log({ taskOwner: await fromWei(await getBalance(taskOwner)) });
     console.log({ taskSolver: await fromWei(await getBalance(taskSolver)) });
+    console.log();
   };
 
   before(async () => {
@@ -28,34 +30,40 @@ contract("RunCode", accounts => {
   })
 
   it("registers task", async () => {
-    const res = await RunCode.registerTask(
+    await RunCode.registerTask(
       taskId,
       successReward, 
       submissionPrice,
-      { from: taskOwner, value: toWei("10") }
+      { from: taskOwner, value: taskRegisterValue }
     );
-    // assert(res == true);
   });
 
   it("submits solution", async () => {
-    const res = await RunCode.addSubmission(
+    await RunCode.addSubmission(
       taskId,
       codeKey, 
-      { from: taskSolver, value: toWei("1") }
+      { from: taskSolver, value: submissionPrice }
     );
   });
 
-  it("puts the result", async () => {
-    const res = await RunCode.putStatusResult(
+  it("puts the ACCEPTED result", async () => {
+    await RunCode.putStatusResult(
       taskId,
       codeKey,
-      1,
+      getStatusCodeFor("ACCEPTED"),
       { from: oracle }
     );
+  });
+  
+  it("checks task balance", async () => {
+    const balance = (await RunCode.getBalance.call(
+      taskId,
+      { from: taskOwner }
+    )).toString();
+    assert(balance == taskRegisterValue);
   });
 
   after(async () => {
     await outputAccounts();
   });
-
 });

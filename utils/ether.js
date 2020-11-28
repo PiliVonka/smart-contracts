@@ -14,4 +14,16 @@ const getBalance = (address) => {
   return web3.eth.getBalance(address);
 }
 
-module.exports = { toWei, fromWei, getBalance };
+const getStatusCodeFor = (name) => {
+  switch(name) {
+    case "PENDING":
+      return 0;
+    case "FAIL":
+      return 1;
+    case "ACCEPTED":
+      return 2;
+  }
+  return -1;
+}
+
+module.exports = { toWei, fromWei, getBalance, getStatusCodeFor };

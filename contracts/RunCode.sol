@@ -59,7 +59,7 @@ contract RunCode {
         string memory taskId,
         uint256 successReward,
         uint256 submissionPrice
-    ) 
+    )
         public
         payable
         ifTaskNotExists(taskId)
@@ -119,7 +119,7 @@ contract RunCode {
 
     function getBalance(
         string memory taskId
-    ) 
+    )
         public
         ifTaskOwner(taskId)
         returns (uint256)
@@ -130,7 +130,7 @@ contract RunCode {
 
     function withdrawAll(
         string memory taskId
-    ) 
+    )
         public 
         ifTaskOwner(taskId) 
     {
@@ -142,7 +142,7 @@ contract RunCode {
     function withdraw(
         string memory taskId,
         uint256 value
-    ) 
+    )
         public 
         ifTaskOwner(taskId)
         returns (bool)

@@ -49,7 +49,10 @@ contract RunCode {
         string memory taskId,
         uint256 successReward,
         uint256 submissionPrice
-    ) public payable {
+    ) public payable returns (bool) {
+        // string memory temp = tasks[taskId].id;
+        require(keccak256(abi.encodePacked(taskId)) != keccak256(abi.encodePacked(tasks[taskId].id)), "Given taskId already exists");
+
         Task memory task = Task({ 
             id: taskId, 
             owner: msg.sender,
@@ -58,6 +61,8 @@ contract RunCode {
             submissionPrice: submissionPrice
         });
         tasks[taskId] = task;
+
+        return true;
     }
 
     function withdrawAll(string memory taskId) public ifTaskOwner(taskId) {
@@ -73,13 +78,14 @@ contract RunCode {
         task.balance -= value;
     }
 
-    function addSubmission(string memory taskId, string memory codeKey) public payable {
+    function addSubmission(string memory taskId, string memory codeKey) public payable returns(bool) {
         Task memory task = tasks[taskId];
         require(msg.value >= task.submissionPrice, "Value is less then the price");
         codeToUser[codeKey] = msg.sender;
+        return true;
     }
 
-    function sendStatus(string memory codeKey, string memory taskId, CodeStatus status) public ifOracle returns(bool) {
+    function putStatusResult(string memory taskId, string memory codeKey, CodeStatus status) public ifOracle returns(bool) {
         if (status == CodeStatus.ACCEPTED) {
             Task memory task = tasks[taskId];
             require(task.balance >= task.successReward, "Balance is less than reward");
